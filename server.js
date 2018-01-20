@@ -67,6 +67,15 @@ app.route('/')
 
     destination = process.cwd() + "/tmp/" + pluginSlug + '-' + new Date().getTime();
 
+    // ENSURE THE TEMP DIR EXISTS BEFORE PROCEEDING, SEEMS TO FAIL ON WINDOWS, ERNO -4058
+    fs.ensureDir(destination, function(err) {
+
+        console.log(err);
+
+        return;
+
+      })
+
     fs.copy(origin, destination, function(err) {
 
         if (err) {
