@@ -16,250 +16,250 @@ var replace = require('replace');
 var bodyParser = require('body-parser')
 var EasyZip = require('easy-zip').EasyZip;
 var CronJob = require('cron').CronJob;
-var ua = require('universal-analytics');
+// var ua = require('universal-analytics');
 
 app.set('port', port);
 app.set('view engine', 'ejs');
-app.set('views', path.join( __dirname, 'views' ));
+app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.static(__dirname + '/public'));
-app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.route('/')
-	//GET REQUEST DRAW THE HOME PAGE
-	.get(function(req, res){
+    //GET REQUEST DRAW THE HOME PAGE
+    .get(function(req, res) {
 
-		res.render('index');
+        res.render('index');
 
-	}) // END GET ROUTE
+    }) // END GET ROUTE
 
-	.post(function(req, res){
+.post(function(req, res) {
 
-		var origin = process.cwd() + "/source/";
-		var pluginSlug = "";
-		var pluginName = "";
-		var pluginURI = "";
-		var pluginAuthor = "";
-		var pluginAuthorURI = "";
-		var pluginDescription = "";
-		var pluginNamePackage = "";
-		var pluginNameInstance = "";
-		var pluginAuthorEmail = "";
-		var pluginAuthorFull = "";
-		var destination = "";
-		var data = req.body
-		var visitor = ua('UA-56742268-1');
+    var origin = process.cwd() + "/source/";
+    var pluginSlug = "";
+    var pluginName = "";
+    var pluginURI = "";
+    var pluginAuthor = "";
+    var pluginAuthorURI = "";
+    var pluginDescription = "";
+    var pluginNamePackage = "";
+    var pluginNameInstance = "";
+    var pluginAuthorEmail = "";
+    var pluginAuthorFull = "";
+    var destination = "";
+    var data = req.body
+    // var visitor = ua('UA-56742268-1');
 
-		//Track Event
-		visitor.event('build', 'click', 'download', 1).send();
+    //Track Event
+    // visitor.event('build', 'click', 'download', 1).send();
 
-		// ALL FIELDS REQUIRED IF EMPTY SET DEFAULT VALUES
-		pluginSlug = String(data.slug).length ? String(data.slug).toLowerCase() : 'amazing-plugin';
-		pluginName = String(data.name).length ? data.name : 'Amazing Plugin';
-		pluginURI = String(data.uri).length ? data.uri : 'http://example.com/amazing-plugin-uri/' ;
-		pluginAuthor = String(data.author.name).length ? data.author.name : 'Plugin Author' ;
-		pluginAuthorURI = String(data.author.uri).length ? data.author.uri : 'http://mydomain.tld';
-		pluginAuthorEmail = String(data.author.email).length ? data.author.email : 'my@email.tld';
-		pluginNamePackage = capitalize( pluginSlug );
-		pluginNameInstance = pluginSlug.replace(/-/gi, '_');
-		pluginAuthorFull = pluginAuthor +' <'+ pluginAuthorEmail + '>';
+    // ALL FIELDS REQUIRED IF EMPTY SET DEFAULT VALUES
+    pluginSlug = String(data.slug).length ? String(data.slug).toLowerCase() : 'amazing-plugin';
+    pluginName = String(data.name).length ? data.name : 'Amazing Plugin';
+    pluginURI = String(data.uri).length ? data.uri : 'http://example.com/amazing-plugin-uri/';
+    pluginAuthor = String(data.author.name).length ? data.author.name : 'Plugin Author';
+    pluginAuthorURI = String(data.author.uri).length ? data.author.uri : 'http://mydomain.tld';
+    pluginAuthorEmail = String(data.author.email).length ? data.author.email : 'my@email.tld';
+    pluginNamePackage = capitalize(pluginSlug);
+    pluginNameInstance = pluginSlug.replace(/-/gi, '_');
+    pluginAuthorFull = pluginAuthor + ' <' + pluginAuthorEmail + '>';
 
-		destination = process.cwd() + "/tmp/" + pluginSlug + '-' + new Date().getTime();
+    destination = process.cwd() + "/tmp/" + pluginSlug + '-' + new Date().getTime();
 
-		fs.copy( origin, destination, function(err){
+    fs.copy(origin, destination, function(err) {
 
-			if (err){
+        if (err) {
 
-				console.error(err);
+            console.error(err);
 
-				return;
+            return;
 
-			}
+        }
 
-			//RENAME THE MAIN PLUGIN DIRECTORY
-			fs.renameSync( destination + '/plugin-name', destination + '/' + pluginSlug);
+        //RENAME THE MAIN PLUGIN DIRECTORY
+        fs.renameSync(destination + '/plugin-name', destination + '/' + pluginSlug);
 
-			//FIND AND REPLACE FILES NAMES
-			walker(destination + '/' + pluginSlug, function(err, files) {
+        //FIND AND REPLACE FILES NAMES
+        walker(destination + '/' + pluginSlug, function(err, files) {
 
-				if (err){
+            if (err) {
 
-					console.error(err);
+                console.error(err);
 
-					return;
+                return;
 
-				}
+            }
 
-				files.forEach(function(file){
+            files.forEach(function(file) {
 
-					var newName;
+                var newName;
 
-					var re = /plugin-name/gi;
+                var re = /plugin-name/gi;
 
-					newName = file.replace(re, pluginSlug);
+                newName = file.replace(re, pluginSlug);
 
-					fs.renameSync( file, newName);
+                fs.renameSync(file, newName);
 
-				});
+            });
 
-				// Plugin URI
-				replace({
+            // Plugin URI
+            replace({
 
-					regex: "http://example.com/plugin-name-uri/",
+                regex: "http://example.com/plugin-name-uri/",
 
-					replacement: pluginURI,
+                replacement: pluginURI,
 
-					paths:[destination + '/' + pluginSlug + '/' + pluginSlug +'.php'],
+                paths: [destination + '/' + pluginSlug + '/' + pluginSlug + '.php'],
 
-					recursive: false,
+                recursive: false,
 
-					silent: true
+                silent: true
 
-				});
+            });
 
-				// Plugin Name
-				replace({
+            // Plugin Name
+            replace({
 
-					regex: "WordPress Plugin Boilerplate",
+                regex: "WordPress Plugin Boilerplate",
 
-					replacement: pluginName,
+                replacement: pluginName,
 
-					paths:[destination + '/' + pluginSlug + '/' + pluginSlug +'.php'],
+                paths: [destination + '/' + pluginSlug + '/' + pluginSlug + '.php'],
 
-					recursive: true,
+                recursive: true,
 
-					silent: true
+                silent: true
 
-				});
+            });
 
-				//Plugin URI
-				replace({
+            //Plugin URI
+            replace({
 
-					regex: "http://example.com/plugin-name-uri/",
+                regex: "http://example.com/plugin-name-uri/",
 
-					replacement: pluginURI,
+                replacement: pluginURI,
 
-					paths:[destination + '/' + pluginSlug + '/' + pluginSlug +'.php'],
+                paths: [destination + '/' + pluginSlug + '/' + pluginSlug + '.php'],
 
-					recursive: true,
+                recursive: true,
 
-					silent: true
+                silent: true
 
-				});
+            });
 
-				//find Plugin Author
-				replace({
+            //find Plugin Author
+            replace({
 
-					regex: "Your Name or Your Company",
+                regex: "Your Name or Your Company",
 
-					replacement: pluginAuthor,
+                replacement: pluginAuthor,
 
-					paths:[destination + '/' + pluginSlug + '/' + pluginSlug +'.php'],
+                paths: [destination + '/' + pluginSlug + '/' + pluginSlug + '.php'],
 
-					recursive: true,
+                recursive: true,
 
-					silent: true
+                silent: true
 
-				});
+            });
 
-				//find Plugin Author Full
-				replace({
+            //find Plugin Author Full
+            replace({
 
-					regex: "Your Name <email@example.com>",
+                regex: "Your Name <email@example.com>",
 
-					replacement: pluginAuthorFull,
+                replacement: pluginAuthorFull,
 
-					paths:[destination + '/' + pluginSlug],
+                paths: [destination + '/' + pluginSlug],
 
-					recursive: true,
+                recursive: true,
 
-					silent: true
+                silent: true
 
-				});
+            });
 
-				//find Plugin_Name
-				replace({
+            //find Plugin_Name
+            replace({
 
-					regex: "Plugin_Name",
+                regex: "Plugin_Name",
 
-					replacement: pluginNamePackage,
+                replacement: pluginNamePackage,
 
-					paths:[destination + '/' + pluginSlug],
+                paths: [destination + '/' + pluginSlug],
 
-					recursive: true,
+                recursive: true,
 
-					silent: true
+                silent: true
 
-				});
+            });
 
-				//find Plugin slug
-				replace({
+            //find Plugin slug
+            replace({
 
-					regex: "plugin-name",
+                regex: "plugin-name",
 
-					replacement: pluginSlug,
+                replacement: pluginSlug,
 
-					paths:[destination + '/' + pluginSlug],
+                paths: [destination + '/' + pluginSlug],
 
-					recursive: true,
+                recursive: true,
 
-					silent: true
+                silent: true
 
-				});
+            });
 
-				//find Author URI
-				replace({
+            //find Author URI
+            replace({
 
-					regex: "http://example.com/?",
+                regex: "http://example.com/?",
 
-					replacement: pluginAuthorURI,
+                replacement: pluginAuthorURI,
 
-					paths:[destination + '/' + pluginSlug],
+                paths: [destination + '/' + pluginSlug],
 
-					recursive: true,
+                recursive: true,
 
-					silent: true
+                silent: true
 
-				});
+            });
 
-				//find Author URI
-				replace({
+            //find Author URI
+            replace({
 
-					regex: "plugin_name",
+                regex: "plugin_name",
 
-					replacement: pluginNameInstance,
+                replacement: pluginNameInstance,
 
-					paths:[destination + '/' + pluginSlug + '/' + pluginSlug +'.php'],
+                paths: [destination + '/' + pluginSlug + '/' + pluginSlug + '.php'],
 
-					recursive: true,
+                recursive: true,
 
-					silent: true
+                silent: true
 
-				});
+            });
 
-				//Replace done ZIP it
+            //Replace done ZIP it
 
-				var zip = new EasyZip();
+            var zip = new EasyZip();
 
-				zip.zipFolder(destination + '/' + pluginSlug, function(){
+            zip.zipFolder(destination + '/' + pluginSlug, function() {
 
-					zip.writeToResponse(res, pluginSlug);
+                zip.writeToResponse(res, pluginSlug);
 
-				});
-			});
+            });
+        });
 
-		});
+    });
 
-	}); //END ROUTE
+}); //END ROUTE
 
 /**
  * CRON JOB TO GET NEW CODE FROM GITHUB EVERY DAY AT 1:30AM
  */
-var job = new CronJob('30 1 * * *', function(){
+var job = new CronJob('30 1 * * *', function() {
 
-	//GET FRESH CODE
-	getSourceCode();
+    //GET FRESH CODE
+    getSourceCode();
 
 
 }, true, 'America/Los_Angeles');
@@ -270,11 +270,11 @@ job.start();
  * CRON JOB TO CLEAN THE TMP FOLDER EVERY HOUR
  */
 
-var clean = new CronJob('0 * * * *', function(){
+var clean = new CronJob('0 * * * *', function() {
 
-	var destination = process.cwd() + "/tmp/";
+    var destination = process.cwd() + "/tmp/";
 
-	rimraf( destination, function(){});
+    rimraf(destination, function() {});
 
 }, true, 'America/Los_Angeles');
 
@@ -283,36 +283,36 @@ clean.start();
 /**
  * GET PLUGIN CODE FROM GITHUB
  */
-var getSourceCode = function(){
+var getSourceCode = function() {
 
-	var repo = {user: 'DevinVinson', repo: 'WordPress-Plugin-Boilerplate', ref: 'master'};
+    var repo = { user: 'DevinVinson', repo: 'WordPress-Plugin-Boilerplate', ref: 'master' };
 
-	var destination = process.cwd() + "/source/";
+    var destination = process.cwd() + "/source/";
 
-	//DELETE OLD CODE
-	rimraf( destination, function(){});
+    //DELETE OLD CODE
+    rimraf(destination, function() {});
 
 
-	//GET THE NEW CODE FORM THE REPO
-	ghdownload(repo, destination)
+    //GET THE NEW CODE FORM THE REPO
+    ghdownload(repo, destination)
 
-		.on('zip', function(zipUrl) {
+    .on('zip', function(zipUrl) {
 
-			console.log('zip: ' + zipUrl)
+        console.log('zip: ' + zipUrl)
 
-		})
+    })
 
-		.on('error', function(err) {
+    .on('error', function(err) {
 
-			console.error('error ' + err)
+        console.error('error ' + err)
 
-		})
+    })
 
-		.on('end', function() {
+    .on('end', function() {
 
-			console.log('Finish Github Download ');
+        console.log('Finish Github Download ');
 
-		});
+    });
 
 }
 
@@ -321,66 +321,66 @@ var getSourceCode = function(){
  */
 var walker = function(dir, done) {
 
-	var results = [];
+    var results = [];
 
-	fs.readdir(dir, function(err, list) {
+    fs.readdir(dir, function(err, list) {
 
-		if (err) return done(err);
+        if (err) return done(err);
 
-		var i = 0;
+        var i = 0;
 
-		(function next() {
+        (function next() {
 
-			var file = list[i++];
+            var file = list[i++];
 
-			if (!file) return done(null, results);
+            if (!file) return done(null, results);
 
-			file = dir + '/' + file;
+            file = dir + '/' + file;
 
-			fs.stat(file, function(err, stat) {
+            fs.stat(file, function(err, stat) {
 
-				if (stat && stat.isDirectory()) {
+                if (stat && stat.isDirectory()) {
 
-					walker(file, function(err, res) {
+                    walker(file, function(err, res) {
 
-						results = results.concat(res);
+                        results = results.concat(res);
 
-						next();
+                        next();
 
-					});
+                    });
 
-				} else {
+                } else {
 
-          			results.push(file);
+                    results.push(file);
 
-          			next();
+                    next();
 
-        		}
+                }
 
-      		});
+            });
 
-    	})();
+        })();
 
-  	});
+    });
 
 };
 
 
-var capitalize = function(name){
+var capitalize = function(name) {
 
-	var newName = "";
+    var newName = "";
 
-	name = name.replace(/-/gi, ' ');
+    name = name.replace(/-/gi, ' ');
 
-	pieces = name.split(' ');
+    pieces = name.split(' ');
 
-	pieces.forEach(function(word){
+    pieces.forEach(function(word) {
 
-		newName += word.charAt(0).toUpperCase() + word.slice(1) + ' ';
+        newName += word.charAt(0).toUpperCase() + word.slice(1) + ' ';
 
-	});
+    });
 
-	return newName.trim().replace(/ /gi, '_');
+    return newName.trim().replace(/ /gi, '_');
 
 }
 
@@ -390,6 +390,6 @@ getSourceCode();
 //Start web app.
 app.listen(app.get('port'), function() {
 
-	console.log("Node app is running at localhost:" + app.get('port'));
+    console.log("Node app is running at localhost:" + app.get('port'));
 
 });
